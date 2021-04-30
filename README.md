@@ -1,5 +1,7 @@
 # alpine-wireguard-transmission README
 
+docker container for running transmission inside a wireguard network namespace
+
 # Requirements
 
  * Create a folder to map that will store torrents and config in the example below it's "/home/jmandawg/data"
