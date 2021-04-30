@@ -7,7 +7,7 @@ TRANS_CONFIG_DIR="/data/transmission-config"
 mkdir -p /etc/netns/container/
 echo "nameserver ${WG_IF_DNS}" > /etc/netns/container/resolv.conf
 
-if [ ! -f "${WG_CONFIG_DIR}" ]; then
+if [ ! -d "${WG_CONFIG_DIR}" ]; then
     echo "wireguard config folder not found creating"
     mkdir -p "${WG_CONFIG_DIR}"
     chown "${USER_ID}":"${GROUP_ID}" -R "${WG_CONFIG_DIR}"
