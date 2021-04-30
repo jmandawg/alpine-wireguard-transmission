@@ -11,7 +11,7 @@ o
  * This will probaly only work on ipv4 as that's all i can test on.
 
 # Example Running
-'''
+
 docker run -it \
   -e WG_IF_PRIVATE_KEY="abc123...." \
   -e WG_IF_ADDRESS="10.x.x./32" \
@@ -26,4 +26,4 @@ docker run -it \
   -p 9099:9091 \
   --sysctl net.ipv4.ip_forward=1 \
   -v /home/jmandawg/data:/data \
-'''
+
