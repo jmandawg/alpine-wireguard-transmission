@@ -1,4 +1,4 @@
-# Alpine-wireguard-transmission README
+# alpine-wireguard-transmission README
 
 # Requirements
 
