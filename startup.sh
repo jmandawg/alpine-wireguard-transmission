@@ -1,16 +1,35 @@
 #!/bin/sh
 
+WG_CONFIG_DIR="/data/wireguard-config"
+TRANS_CONFIG_DIR="/data/transmission-config"
+
+#Setup DNS for container
 mkdir -p /etc/netns/container/
-echo "nameserver ${DNS}" > /etc/netns/container/resolv.conf
+echo "nameserver ${WG_IF_DNS}" > /etc/netns/container/resolv.conf
+
+if [ ! -f "${WG_CONFIG_DIR}" ]; then
+    echo "wireguard config folder not found creating"
+    mkdir -p "${WG_CONFIG_DIR}"
+    chown "${USER_ID}":"${GROUP_ID}" -R "${WG_CONFIG_DIR}"
+fi
+envsubst < /templates/wg0.conf > "${WG_CONFIG_DIR}"/wg0.conf
+chown 1000:1000 "${WG_CONFIG_DIR}"/wg0.conf
+
+if [ ! -f "${TRANS_CONFIG_DIR}"/settings.json ]; then
+    echo "Transmission config not found copying template"
+    mkdir -p "${TRANS_CONFIG_DIR}"
+    cp templates/settings.json "${TRANS_CONFIG_DIR}"
+    chown "${USER_ID}":"${GROUP_ID}" -R "${TRANS_CONFIG_DIR}"
+fi
 
 ip netns add container
 ip link add wg0 type wireguard
 #if these are first, it will not resolve the endpoint hostname and you must use the ip address
-#ip -n container addr add "${ADDRESS}" dev wg0
-#ip netns exec container wg setconf wg0 /data/wireguard-config/wg0.conf
-wg setconf wg0 /data/wireguard-config/wg0.conf
+#ip -n container addr add "${WG_IF_ADDRESS}" dev wg0
+#ip netns exec container wg setconf wg0 "${WG_CONFIG_DIR}"/wg0.conf
+wg setconf wg0 "${WG_CONFIG_DIR}"/wg0.conf
 ip link set wg0 netns container
-ip -n container addr add "${ADDRESS}" dev wg0
+ip -n container addr add "${WG_IF_ADDRESS}" dev wg0
 ip -n container link set wg0 up
 ip -n container route add default dev wg0
 
@@ -42,5 +61,5 @@ iptables -t nat -A POSTROUTING -d 10.1.1.2/24 -j SNAT --to-source 10.1.1.1
 addgroup -g "${GROUP_ID}" trans
 adduser -u "${USER_ID}" -G trans -D trans
 
-ip netns exec container su - trans -c '/usr/bin/transmission-daemon --foreground --config-dir /data/transmission-config'
+ip netns exec container su - trans -c "/usr/bin/transmission-daemon --foreground --config-dir ${TRANS_CONFIG_DIR}"
 
