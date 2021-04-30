@@ -1,7 +1,7 @@
 # Alpine-wireguard-transmission README
 
 # Requirements
-o
+
  * Create a folder to map that will store torrents and config in the example below it's "/home/jmandawg/data"
  * The user-id and group-id that will be used on the output files/folders - This user must have read/write access to the /data folder above
  * All variables prefixed with "WG_" come from your VPN provider
