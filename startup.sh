@@ -2,10 +2,14 @@
 
 WG_CONFIG_DIR="/data/wireguard-config"
 TRANS_CONFIG_DIR="/data/transmission-config"
+CONTAINER_DIR="/etc/netns/container"
 
 #Setup DNS for container
-mkdir -p /etc/netns/container/
-echo "nameserver ${WG_IF_DNS}" > /etc/netns/container/resolv.conf
+if [ ! -d "${CONTAINER_DIR}" ]; then
+  echo "creating container dir ${CONTAINER_DIR}"
+  mkdir -p "${CONTAINER_DIR}"
+fi
+echo "nameserver ${WG_IF_DNS}" > "${CONTAINER_DIR}"/resolv.conf
 
 if [ ! -d "${WG_CONFIG_DIR}" ]; then
     echo "wireguard config folder not found creating"
@@ -21,6 +25,12 @@ if [ ! -f "${TRANS_CONFIG_DIR}"/settings.json ]; then
     cp templates/settings.json "${TRANS_CONFIG_DIR}"
     chown "${USER_ID}":"${GROUP_ID}" -R "${TRANS_CONFIG_DIR}"
 fi
+
+#Delete old interfaces if they exist
+ip netns del container
+ip link del wg0
+ip link del veth1
+
 
 ip netns add container
 ip link add wg0 type wireguard
