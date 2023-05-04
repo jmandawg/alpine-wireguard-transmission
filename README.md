@@ -21,6 +21,7 @@ docker run -it \
   -e WG_PEER_PUBLIC_KEY="abc123...." \
   -e WG_PEER_PRESHARED_KEY="abc123..." \
   -e WG_PEER_ENDPOINT="host:port" \
+  -e WG_ALLOWED_IPS="0.0.0.0/0, ::/0" \
   -e GROUP_ID="1000" \
   -e USER_ID="1000" \
   --privileged \
