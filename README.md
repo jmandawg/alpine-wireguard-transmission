@@ -1,6 +1,6 @@
 # alpine-wireguard-transmission README
 
-docker container for running transmission inside a wireguard network namespace
+docker container for running transmission inside a wireguard network namespace with ssh server that allows port forwarding through wireguard.
 
 # Requirements
 
@@ -11,6 +11,7 @@ docker container for running transmission inside a wireguard network namespace
    You can stop the docker container and moify them to your liking.  Do not modify "rpc-bind-address" or "rpc-whitelist"
  * The web interface should be available on the docker host on port 9091 (or whatever port you map it to).
  * This will probaly only work on ipv4 as that's all i can test on.
+ * set the root password environment variable if you want to use ssh for port forwarding through wireguard
 
 # Example Running
 
@@ -24,8 +25,12 @@ docker run -it \
   -e WG_ALLOWED_IPS="0.0.0.0/0, ::/0" \
   -e GROUP_ID="1000" \
   -e USER_ID="1000" \
+  -e ROOT_PASSWD='=!S0m3P@ssW0rd!=' \
+  -e PRE_SCRIPT_CMD='echo "hello pre-script"' \
+  -e POST_SCRIPT_CMD='echo "hello post-script"' \
   --privileged \
   --name wireguard-transmission \
+  -p 9022:22 \
   -p 9099:9091 \
   --sysctl net.ipv4.ip_forward=1 \
   -v /home/jmandawg/data:/data \
