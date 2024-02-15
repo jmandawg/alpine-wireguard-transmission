@@ -4,6 +4,12 @@ WG_CONFIG_DIR="/data/wireguard-config"
 TRANS_CONFIG_DIR="/data/transmission-config"
 CONTAINER_DIR="/etc/netns/container"
 
+#Pre-script cmd
+if [ -n "${PRE_SCRIPT_CMD}" ]; then
+  echo "Running $PRE_SCRIPT_CMD"
+  eval "${PRE_SCRIPT_CMD}"
+fi
+
 #Setup DNS for container
 if [ ! -d "${CONTAINER_DIR}" ]; then
   echo "creating container dir ${CONTAINER_DIR}"
@@ -24,6 +30,11 @@ if [ ! -f "${TRANS_CONFIG_DIR}"/settings.json ]; then
     mkdir -p "${TRANS_CONFIG_DIR}"
     cp templates/settings.json "${TRANS_CONFIG_DIR}"
     chown "${USER_ID}":"${GROUP_ID}" -R "${TRANS_CONFIG_DIR}"
+fi
+
+if [ -n "${ROOT_PASSWD}" ]; then
+  echo "Setting root password..."
+  echo "root:${ROOT_PASSWD}" | chpasswd
 fi
 
 #Delete old interfaces if they exist
@@ -53,6 +64,7 @@ ip link set dev veth1 up
 #Reference
 #https://unix.stackexchange.com/questions/391193/how-to-forward-traffic-between-linux-network-namespaces/393468#393468
 
+iptables -t nat -A PREROUTING ! -s 10.1.1.0/24 -p tcp -m tcp --dport 22 -j DNAT --to-destination 10.1.1.2
 iptables -t nat -A PREROUTING ! -s 10.1.1.0/24 -p tcp -m tcp --dport 9091 -j DNAT --to-destination 10.1.1.2
 iptables -t nat -A POSTROUTING -d 10.1.1.2/24 -j SNAT --to-source 10.1.1.1
 
@@ -71,5 +83,16 @@ iptables -t nat -A POSTROUTING -d 10.1.1.2/24 -j SNAT --to-source 10.1.1.1
 addgroup -g "${GROUP_ID}" trans
 adduser -u "${USER_ID}" -G trans -D trans
 
+#start ssh server
+ssh-keygen -A
+ip netns exec container /usr/sbin/sshd -D &
+
+#post script 
+if [ -n "${POST_SCRIPT_CMD}" ]; then
+  echo "Running $POST_SCRIPT_CMD"
+  eval "${POST_SCRIPT_CMD}"
+fi
+
+#start transmission
 ip netns exec container su - trans -c "/usr/bin/transmission-daemon --foreground --config-dir ${TRANS_CONFIG_DIR}"
 
